@@ -1,3 +1,74 @@
 # Practical Machine Learning Course Project 
 
 ## Loading and preprocessing the data
+```{r loaddata, echo=TRUE, cache=TRUE, warning=FALSE}
+library(caret)
+set.seed(1234)
+training <- read.csv("./pml-training.csv", header = TRUE,
+                     na.strings = c("NA", ""))
+testing <- read.csv("./pml-testing.csv", header = TRUE,
+                    na.strings = c("NA", ""))
+
+## There are 100 columns containing 19216 missing values
+## Other columns have no missing values
+training.columns.na <- colSums(is.na(training)) != 0
+testing.columns.na <- colSums(is.na(training)) != 0
+cat("The missing columns are same in training set and testing set\n", sum(training.columns.na == testing.columns.na))
+training<- training[, !training.columns.na]
+testing<- testing[, !testing.columns.na]
+
+## The first 7 remaining columns are about information like
+## username, which are irrelevant to class
+training<- training[, 8:60]
+testing <- testing[, 8:60]
+
+## Data splitting: using 75% of the training set as training set
+## and 25% of the training set as validation set.
+inTrain <- createDataPartition(y=training$classe, p=0.75, list=F)
+training <- training[inTrain, ]
+validation <- training[-inTrain, ]
+
+## Preprocessing data with center and scale
+pp <- preProcess(training[,-ncol(training)])
+training <- cbind(predict(pp, training[,-ncol(training)]),
+                  training[ncol(training)])
+validation <- cbind(predict(pp, validation[,-ncol(validation)]),
+                  validation[ncol(validation)])
+testing <- cbind(predict(pp, testing[,-ncol(testing)]),
+                  testing[ncol(testing)])
+```
+
+## Training Models
+```{r model, echo=TRUE, cache=TRUE, warning=FALSE}
+library(doParallel)
+cl <- makeCluster(detectCores())
+registerDoParallel(cl)
+fitControl <- trainControl(## 5-fold CV
+                           method = "cv",
+                           number = 5)
+rfFit <- train(classe ~ ., data = training,
+               method = "rf",
+               trControl = fitControl)
+rfFit
+```
+
+## Prediction on validation set using final model chosen with cross-validation
+```{r validation, echo=TRUE, cache=TRUE, warning=FALSE}
+pred.validation <- predict(rfFit, newdata=validation)
+confusionMatrix(pred.validation, validation$classe)
+```
+
+## Prediction on testing set
+I estimate the out of sample error with the validation set, which is 25% of the data in original training file. I got a 100% accuracy as estimate of the out of sample error.
+```{r testing, echo=TRUE, cache=TRUE, warning=FALSE}
+pred.testing <- predict(rfFit, newdata=testing)
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(pred.testing)
+pred.testing
+```

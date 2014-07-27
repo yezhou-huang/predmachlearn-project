@@ -53,13 +53,13 @@ rfFit
 ```
 
 ## Prediction on validation set using final model chosen with cross-validation
+I estimate the out of sample error with the validation set, which is 25% of the data in original training file. I got a 100% accuracy as estimate of the out of sample error.
 ```{r validation, echo=TRUE, cache=TRUE, warning=FALSE}
 pred.validation <- predict(rfFit, newdata=validation)
 confusionMatrix(pred.validation, validation$classe)
 ```
 
 ## Prediction on testing set
-I estimate the out of sample error with the validation set, which is 25% of the data in original training file. I got a 100% accuracy as estimate of the out of sample error.
 ```{r testing, echo=TRUE, cache=TRUE, warning=FALSE}
 pred.testing <- predict(rfFit, newdata=testing)
 pml_write_files = function(x){

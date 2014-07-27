@@ -57,10 +57,8 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <h1>Practical Machine Learning Course Project</h1>
 <div id="loading-and-preprocessing-the-data" class="section level2">
 <h2>Loading and preprocessing the data</h2>
-<pre class="r"><code>library(caret)</code></pre>
-<pre><code>## Loading required package: lattice
-## Loading required package: ggplot2</code></pre>
-<pre class="r"><code>set.seed(1234)
+<pre class="r"><code>library(caret)
+set.seed(1234)
 training &lt;- read.csv(&quot;./pml-training.csv&quot;, header = TRUE,
                      na.strings = c(&quot;NA&quot;, &quot;&quot;))
 testing &lt;- read.csv(&quot;./pml-testing.csv&quot;, header = TRUE,
@@ -98,23 +96,16 @@ testing &lt;- cbind(predict(pp, testing[,-ncol(testing)]),
 </div>
 <div id="training-models" class="section level2">
 <h2>Training Models</h2>
-<pre class="r"><code>library(doParallel)</code></pre>
-<pre><code>## Loading required package: foreach
-## Loading required package: iterators
-## Loading required package: parallel</code></pre>
-<pre class="r"><code>cl &lt;- makeCluster(detectCores())
+<pre class="r"><code>library(doParallel)
+cl &lt;- makeCluster(detectCores())
 registerDoParallel(cl)
 fitControl &lt;- trainControl(## 5-fold CV
                            method = &quot;cv&quot;,
                            number = 5)
 rfFit &lt;- train(classe ~ ., data = training,
                method = &quot;rf&quot;,
-               trControl = fitControl)</code></pre>
-<pre><code>## Loading required package: randomForest</code></pre>
-<pre><code>## Warning: package 'randomForest' was built under R version 3.1.1</code></pre>
-<pre><code>## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.</code></pre>
-<pre class="r"><code>rfFit</code></pre>
+               trControl = fitControl)
+rfFit</code></pre>
 <pre><code>## Random Forest 
 ## 
 ## 14718 samples
@@ -124,20 +115,21 @@ rfFit &lt;- train(classe ~ ., data = training,
 ## No pre-processing
 ## Resampling: Cross-Validated (5 fold) 
 ## 
-## Summary of sample sizes: 11774, 11775, 11775, 11773, 11775 
+## Summary of sample sizes: 11774, 11774, 11776, 11774, 11774 
 ## 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
 ##   2     1         1      0.003        0.003   
-##   30    1         1      0.003        0.003   
-##   50    1         1      0.004        0.005   
+##   30    1         1      0.002        0.002   
+##   50    1         1      0.001        0.002   
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 27.</code></pre>
 </div>
 <div id="prediction-on-validation-set-using-final-model-chosen-with-cross-validation" class="section level2">
 <h2>Prediction on validation set using final model chosen with cross-validation</h2>
+<p>I estimate the out of sample error with the validation set, which is 25% of the data in original training file. I got a 100% accuracy as estimate of the out of sample error.</p>
 <pre class="r"><code>pred.validation &lt;- predict(rfFit, newdata=validation)
 confusionMatrix(pred.validation, validation$classe)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
@@ -182,7 +174,10 @@ pml_write_files = function(x){
     write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
   }
 }
-pml_write_files(pred.testing)</code></pre>
+pml_write_files(pred.testing)
+pred.testing</code></pre>
+<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E</code></pre>
 </div>
 </div>
 
